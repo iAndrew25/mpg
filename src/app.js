@@ -15,7 +15,7 @@ sw.onopen = () => {
 
 sw.onmessage = ({data}) => {
 	const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-	console.log("parsedData", parsedData);
+	//console.log("parsedData", parsedData);
 
 	switch(parsedData.type) {
 		case 'GET_PLAYERS':
@@ -27,7 +27,7 @@ sw.onmessage = ({data}) => {
 		default:
 	}
 
-	console.log('Socket type -', parsedData);
+	//console.log('Socket type -', parsedData);
 }
 
 let ctx, img;
@@ -41,17 +41,20 @@ let MOVEMENT = {
 
 
 const move = () => {
-	if(MOVEMENT.LEFT) {
+		console.log("me", me);
+	if(MOVEMENT.LEFT && me.x > 0) {
 		me.x -= me.speed;
 	}
-	if(MOVEMENT.RIGHT) {
+	if(MOVEMENT.RIGHT && me.x < BOARD.WIDTH - 50) {
 		me.x += me.speed;
 	}
-	if(MOVEMENT.TOP) {
-		me.y += me.speed;
-	}
-	if(MOVEMENT.BOTTOM) {
+	if(MOVEMENT.TOP && me.y > 0) {
+		console.log('top');
 		me.y -= me.speed;
+	}
+	if(MOVEMENT.BOTTOM && me.y < BOARD.HEIGHT - 50) {
+		console.log('bottom');
+		me.y += me.speed;
 	}
 
 	if(sw.readyState === sw.OPEN && (MOVEMENT.LEFT || MOVEMENT.RIGHT || MOVEMENT.TOP || MOVEMENT.BOTTOM)) {
@@ -78,20 +81,20 @@ window.onload = () => {
 document.onkeydown = function(e) {
 	if(e.keyCode === 37) MOVEMENT.LEFT = true;
 	if(e.keyCode === 39) MOVEMENT.RIGHT = true;
-	if(e.keyCode === 38) MOVEMENT.BOTTOM = true;
-	if(e.keyCode === 40) MOVEMENT.TOP = true;
+	if(e.keyCode === 40) MOVEMENT.BOTTOM = true;
+	if(e.keyCode === 38) MOVEMENT.TOP = true;
 }
 
 document.onkeyup = function(e) {
 	if(e.keyCode === 37) MOVEMENT.LEFT = false;
 	if(e.keyCode === 39) MOVEMENT.RIGHT = false;
-	if(e.keyCode === 38) MOVEMENT.BOTTOM = false;
-	if(e.keyCode === 40) MOVEMENT.TOP = false;
+	if(e.keyCode === 40) MOVEMENT.BOTTOM = false;
+	if(e.keyCode === 38) MOVEMENT.TOP = false;
 }
 
 
 function drawPlayers() {
-		console.log("players", players);
+		//console.log("players", players);
 	players.forEach(player => {
 		plyr.drawPlayer(ctx, img, player);
 	})

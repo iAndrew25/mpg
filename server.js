@@ -8,6 +8,9 @@ const app = express(),
 	server = http.createServer(app),
 	wss = new WebSocket.Server({ server });
 
+app.use(express.static(path.join(__dirname)));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname + 'index.html')));
+
 const getId = () => Math.random().toString(36).substring(7);
 
 let noticeAllClients = () => {},
