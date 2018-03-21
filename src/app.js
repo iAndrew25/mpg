@@ -1,65 +1,52 @@
 import {BOARD} from './commons/constants';
-import plyr from './modules/player';
+import socketSubscribe from './commons/socket-subscribe';
 import socket from './commons/socket';
+
+let players = [],
+	currentUser,
+	onMove;
+
+const updatePlayers = users => players = users;
+const updateCurrentUser = user => currentUser = user;
+let ctx, img;
+
+socketSubscribe.subscribe('app.js', {
+	GET_PLAYERS: users => updatePlayers(users),
+	NEW_PLAYER: users => updatePlayers(users),
+	PLAYER_MOVE: users => updatePlayers(users),
+	PLAYER_LEFT: users => updatePlayers(users),
+	GET_ME: user => updateCurrentUser(user),
+})
 
 const CANVAS = document.getElementById('game');
 
 const sw = socket.getInstance();
-let players = [],
-	me = plyr.generatePlayer,
-	onMove;
 
-sw.onopen = () => {
-	sw.send(JSON.stringify({type: 'NEW_PLAYER', payload: me}));
-}
-
-sw.onmessage = ({data}) => {
-	const parsedData = typeof data === 'string' ? JSON.parse(data) : data;
-	//console.log("parsedData", parsedData);
-
-	switch(parsedData.type) {
-		case 'GET_PLAYERS':
-			players = parsedData.payload;
-			break;
-		case 'GET_ME':
-			me = parsedData.payload;
-			console.log("me", me);
-		default:
-	}
-
-	//console.log('Socket type -', parsedData);
-}
-
-let ctx, img;
-
-let MOVEMENT = {
+let KEYS = {
 	LEFT: false,
 	RIGHT: false,
 	TOP: false,
 	BOTTOM: false
 }
 
-
 const move = () => {
-		console.log("me", me);
-	if(MOVEMENT.LEFT && me.x > 0) {
-		me.x -= me.speed;
+	//console.log("currentUser", currentUser);
+	if(KEYS.LEFT && currentUser.x > 0) {
+		currentUser.x -= currentUser.speed;
 	}
-	if(MOVEMENT.RIGHT && me.x < BOARD.WIDTH - 50) {
-		me.x += me.speed;
+	if(KEYS.RIGHT && currentUser.x < BOARD.WIDTH - 50) {
+		currentUser.x += currentUser.speed;
 	}
-	if(MOVEMENT.TOP && me.y > 0) {
-		console.log('top');
-		me.y -= me.speed;
+	if(KEYS.TOP && currentUser.y > 0) {
+		currentUser.y -= currentUser.speed;
 	}
-	if(MOVEMENT.BOTTOM && me.y < BOARD.HEIGHT - 50) {
-		console.log('bottom');
-		me.y += me.speed;
+	if(KEYS.BOTTOM && currentUser.y < BOARD.HEIGHT - 50) {
+		currentUser.y += currentUser.speed;
 	}
 
-	if(sw.readyState === sw.OPEN && (MOVEMENT.LEFT || MOVEMENT.RIGHT || MOVEMENT.TOP || MOVEMENT.BOTTOM)) {
+	if(sw.readyState === sw.OPEN && (KEYS.LEFT || KEYS.RIGHT || KEYS.TOP || KEYS.BOTTOM)) {
 		//console.log('opened');
-		sw.send(JSON.stringify({type:'PLAYER_MOVE', payload: me}));
+		sw.send(JSON.stringify({type:'PLAYER_MOVE', payload: currentUser}));
 	} else {
 		//console.log('not opened');
 	}
@@ -73,44 +60,39 @@ window.onload = () => {
 	img = new Image();
 	img.src = 'assets/images/player.png';
 	img.onload = function() {
-
 		update();
 	}
 }
 
 document.onkeydown = function(e) {
-	if(e.keyCode === 37) MOVEMENT.LEFT = true;
-	if(e.keyCode === 39) MOVEMENT.RIGHT = true;
-	if(e.keyCode === 40) MOVEMENT.BOTTOM = true;
-	if(e.keyCode === 38) MOVEMENT.TOP = true;
+	if(e.keyCode === 37) KEYS.LEFT = true;
+	if(e.keyCode === 39) KEYS.RIGHT = true;
+	if(e.keyCode === 40) KEYS.BOTTOM = true;
+	if(e.keyCode === 38) KEYS.TOP = true;
 }
 
 document.onkeyup = function(e) {
-	if(e.keyCode === 37) MOVEMENT.LEFT = false;
-	if(e.keyCode === 39) MOVEMENT.RIGHT = false;
-	if(e.keyCode === 40) MOVEMENT.BOTTOM = false;
-	if(e.keyCode === 38) MOVEMENT.TOP = false;
+	if(e.keyCode === 37) KEYS.LEFT = false;
+	if(e.keyCode === 39) KEYS.RIGHT = false;
+	if(e.keyCode === 40) KEYS.BOTTOM = false;
+	if(e.keyCode === 38) KEYS.TOP = false;
 }
 
-
 function drawPlayers() {
-		//console.log("players", players);
+	//console.log("players", players);
 	players.forEach(player => {
-		plyr.drawPlayer(ctx, img, player);
-	})
+		drawPlayer(ctx, img, player);
+	});
+
+	move();
 }
 
 const update = () => {
-
-//console.log("players", players);
 	clearScreen();
-	//draw();
 	drawPlayers();
-	move();
 	requestAnimationFrame(update);
 }
 
-
-
-
 const clearScreen = () => ctx.clearRect(0, 0, CANVAS.width, CANVAS.height);
+
+const drawPlayer = (ctx, img, player) => ctx.drawImage(img, player.x, player.y, 50, 50);
