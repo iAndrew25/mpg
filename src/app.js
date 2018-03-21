@@ -30,7 +30,6 @@ let KEYS = {
 }
 
 const move = () => {
-	//console.log("currentUser", currentUser);
 	if(KEYS.LEFT && currentUser.x > 0) {
 		currentUser.x -= currentUser.speed;
 	}
@@ -44,11 +43,8 @@ const move = () => {
 		currentUser.y += currentUser.speed;
 	}
 
-	if(sw.readyState === sw.OPEN && (KEYS.LEFT || KEYS.RIGHT || KEYS.TOP || KEYS.BOTTOM)) {
-		//console.log('opened');
+	if(KEYS.LEFT || KEYS.RIGHT || KEYS.TOP || KEYS.BOTTOM) {
 		sw.send(JSON.stringify({type:'PLAYER_MOVE', payload: currentUser}));
-	} else {
-		//console.log('not opened');
 	}
 }
 
